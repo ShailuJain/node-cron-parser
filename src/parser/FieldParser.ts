@@ -27,8 +27,21 @@ export abstract class FieldParser {
     }
 
     if (expression.includes(",")) {
-      const values = expression.split(",").map((value) => this.parseValue(value));
+      const values = expression.split(",").flatMap((value) => this.parse(value));
       return [...new Set(values)].sort((a, b) => a - b);
+    }
+
+    if (expression.includes("-") && expression.includes("/")) {
+      const arr = expression.split("/");
+      const [start, end] = arr[0].split("-").map((value) => Number.parseInt(value));
+      const step = Number.parseInt(arr[1]);
+      if (start > end) {
+        throw new Error(`Invalid range in ${this.fieldName}: ${expression}`);
+      }
+      if (isNaN(step) || step <= 0) {
+        throw new Error(`Invalid step value in ${this.fieldName}: ${expression}`);
+      }
+      return this.generateRangeWithStep(start, end, step);
     }
 
     if (expression.includes("-")) {
